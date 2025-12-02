@@ -4,7 +4,7 @@ import { Calendar, Clock, MapPin } from "lucide-react";
 
 export default function AkikahInvitation() {
   return (
-    <div className="h-screen overflow-y-scroll snap-y snap-mandatory">
+    <div className="h-dvh overflow-y-auto snap-y snap-mandatory">
       <HeroSection />
       <CountdownSection />
     </div>
@@ -13,7 +13,7 @@ export default function AkikahInvitation() {
 
 function HeroSection() {
   return (
-    <section className="h-screen flex items-center justify-center overflow-hidden snap-start snap-always">
+    <section className="h-dvh flex items-center justify-center overflow-hidden snap-start snap-always">
       <div className="absolute inset-0">
         <img
           src="/images/zafran-closeup.webp"
@@ -296,7 +296,6 @@ function CountdownSection() {
           </AnimatePresence>
         </div>
       </motion.div>
-     
     </section>
   );
 }
