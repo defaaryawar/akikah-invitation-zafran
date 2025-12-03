@@ -1,38 +1,32 @@
 "use client";
 
-import { useRef, useState } from "react";
-import CoverScreen from "./sections/CoverScreen";
-import AkikahInvitation from "./sections/HeroCountdownSection";
+import { useRef, useEffect } from "react";
+import VideoBackground from "./sections/VideoBackground";
 import FloatingMusicPlayer, { type FloatingMusicPlayerHandle } from "./ui/FloatingMusicPlayer";
 
 function App() {
-  const [isCoverOpen, setIsCoverOpen] = useState(false);
   const playerRef = useRef<FloatingMusicPlayerHandle>(null);
 
-  const openInvitation = () => {
-    setIsCoverOpen(true);
-
-    setTimeout(() => {
-      playerRef.current?.expand();
+  useEffect(() => {
+    // Auto play music dan expand player saat component mount
+    const timer = setTimeout(() => {
       playerRef.current?.playMusic();
-    }, 80);
-  };
+      playerRef.current?.expand();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
-    <div className="relative bg-black">
-      <CoverScreen isCoverOpen={isCoverOpen} openInvitation={openInvitation} />
+    <div className="relative bg-black min-h-screen">
+      {/* Video Background - Full Screen */}
+      <VideoBackground overlay overlayOpacity={0} />
 
-      {isCoverOpen && (
-        <>
-          {/* Main Content with Snap Scroll */}
-          <div className="snap-y snap-mandatory h-screen overflow-y-scroll">
-            <AkikahInvitation />
-            {/* Tambah section lain di sini nanti */}
-          </div>
+      {/* Main Content */}
+      <div className="relative z-10 min-h-screen">{/* Konten kamu di sini */}</div>
 
-          <FloatingMusicPlayer ref={playerRef} autoPlay={false} />
-        </>
-      )}
+      {/* Floating Music Player - Auto play */}
+      <FloatingMusicPlayer ref={playerRef} autoPlay />
     </div>
   );
 }
