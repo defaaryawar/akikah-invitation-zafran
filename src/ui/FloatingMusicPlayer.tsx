@@ -27,12 +27,10 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
     const timeoutRef = useRef<number | null>(null);
     const hasAutoPlayedRef = useRef(false);
 
-    // Song data
     const songUrl = "/songs/putro-nusontoro.mp3";
     const songTitle = "Putro Nuswantoro";
     const artistName = "Manthous";
 
-    // Detect mobile
     useEffect(() => {
       const checkMobile = () => setIsMobile(window.innerWidth < 768);
       checkMobile();
@@ -40,37 +38,38 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
       return () => window.removeEventListener("resize", checkMobile);
     }, []);
 
-    // Auto play logic saat component mount
     useEffect(() => {
-      if (autoPlay && !hasAutoPlayedRef.current) {
-        hasAutoPlayedRef.current = true;
+      if (!autoPlay || hasAutoPlayedRef.current) return;
 
-        // Delay sedikit untuk memastikan audio element sudah ready
-        const autoPlayTimer = setTimeout(() => {
-          if (audioRef.current) {
-            audioRef.current
-              .play()
-              .then(() => {
-                setIsPlaying(true);
-                setIsExpanded(true);
-                setIsPeeking(false);
+      hasAutoPlayedRef.current = true;
+      setIsPeeking(true);
 
-                // Auto minimize setelah 4 detik
-                timeoutRef.current = window.setTimeout(() => {
-                  setIsExpanded(false);
-                  setIsPeeking(true);
-                }, 4000);
-              })
-              .catch((err) => {
-                console.log("Auto-play prevented:", err);
-                // Jika auto-play gagal, tetap tampilkan player dalam mode peek
-                setIsPeeking(true);
-              });
-          }
-        }, 300);
+      const autoPlayTimer = setTimeout(() => {
+        const audio = audioRef.current;
+        if (!audio) return;
 
-        return () => clearTimeout(autoPlayTimer);
-      }
+        audio
+          .play()
+          .then(() => {
+            setIsPlaying(true);
+            setIsExpanded(true);
+            setIsPeeking(false);
+
+            if (timeoutRef.current) clearTimeout(timeoutRef.current);
+            timeoutRef.current = window.setTimeout(() => {
+              setIsExpanded(false);
+              setIsPeeking(true);
+            }, 4000);
+          })
+          .catch(() => {
+            setIsPeeking(true);
+            setIsPlaying(false);
+          });
+      }, 800);
+
+      return () => {
+        clearTimeout(autoPlayTimer);
+      };
     }, [autoPlay]);
 
     useImperativeHandle(ref, () => ({
@@ -92,10 +91,8 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
         setIsExpanded(true);
         setIsPeeking(false);
 
-        // Clear existing timeout
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-        // Auto minimize setelah 4 detik
         timeoutRef.current = window.setTimeout(() => {
           setIsExpanded(false);
           setIsPeeking(true);
@@ -115,7 +112,6 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
       },
     }));
 
-    // Handle play/pause sync with audio element
     useEffect(() => {
       if (!audioRef.current) return;
 
@@ -136,7 +132,6 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-      // Auto minimize setelah 4 detik
       timeoutRef.current = window.setTimeout(() => {
         setIsExpanded(false);
         setIsPeeking(true);
@@ -149,7 +144,6 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
 
-    // Cleanup timeout on unmount
     useEffect(() => {
       return () => {
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -158,7 +152,6 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
 
     return (
       <>
-        {/* Audio element */}
         <audio ref={audioRef} loop>
           <source src={songUrl} type="audio/mpeg" />
         </audio>
@@ -180,7 +173,6 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
               className="fixed top-6 right-2 z-50"
             >
               {isExpanded ? (
-                // EXPANDED VIEW
                 <motion.div
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
@@ -249,7 +241,6 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
                   </div>
                 </motion.div>
               ) : (
-                // PEEK VIEW
                 <motion.div
                   whileTap={{ scale: 0.9 }}
                   whileHover={isMobile ? {} : { scale: 1.15, x: -3 }}
