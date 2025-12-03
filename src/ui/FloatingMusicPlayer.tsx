@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useRef,
-  useEffect,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from "react";
 import { Play, Pause, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -23,7 +17,7 @@ export interface FloatingMusicPlayerHandle {
 }
 
 const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerProps>(
-  ({ }, ref) => {
+  ({ autoPlay = false }, ref) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isPeeking, setIsPeeking] = useState(false);
@@ -31,19 +25,53 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
 
     const audioRef = useRef<HTMLAudioElement>(null);
     const timeoutRef = useRef<number | null>(null);
+    const hasAutoPlayedRef = useRef(false);
 
     // Song data
-    const songUrl = "/songs/kisinan2.mp3";
-    const songTitle = "Kisinan 2";
-    const artistName = "Masdddho";
+    const songUrl = "/songs/putro-nusontoro.mp3";
+    const songTitle = "Putro Nuswantoro";
+    const artistName = "Manthous";
 
-    // Detect mobilec:\Users\ACER\Downloads\kisinan2.mp3
+    // Detect mobile
     useEffect(() => {
       const checkMobile = () => setIsMobile(window.innerWidth < 768);
       checkMobile();
       window.addEventListener("resize", checkMobile);
       return () => window.removeEventListener("resize", checkMobile);
     }, []);
+
+    // Auto play logic saat component mount
+    useEffect(() => {
+      if (autoPlay && !hasAutoPlayedRef.current) {
+        hasAutoPlayedRef.current = true;
+
+        // Delay sedikit untuk memastikan audio element sudah ready
+        const autoPlayTimer = setTimeout(() => {
+          if (audioRef.current) {
+            audioRef.current
+              .play()
+              .then(() => {
+                setIsPlaying(true);
+                setIsExpanded(true);
+                setIsPeeking(false);
+
+                // Auto minimize setelah 4 detik
+                timeoutRef.current = window.setTimeout(() => {
+                  setIsExpanded(false);
+                  setIsPeeking(true);
+                }, 4000);
+              })
+              .catch((err) => {
+                console.log("Auto-play prevented:", err);
+                // Jika auto-play gagal, tetap tampilkan player dalam mode peek
+                setIsPeeking(true);
+              });
+          }
+        }, 300);
+
+        return () => clearTimeout(autoPlayTimer);
+      }
+    }, [autoPlay]);
 
     useImperativeHandle(ref, () => ({
       playMusic() {
@@ -63,16 +91,27 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
       expand() {
         setIsExpanded(true);
         setIsPeeking(false);
+
+        // Clear existing timeout
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+        // Auto minimize setelah 4 detik
+        timeoutRef.current = window.setTimeout(() => {
+          setIsExpanded(false);
+          setIsPeeking(true);
+        }, 4000);
       },
 
       minimize() {
         setIsExpanded(false);
         setIsPeeking(true);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
       },
 
       peek() {
         setIsExpanded(false);
         setIsPeeking(true);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
       },
     }));
 
@@ -97,16 +136,25 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
 
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
+      // Auto minimize setelah 4 detik
       timeoutRef.current = window.setTimeout(() => {
         setIsExpanded(false);
         setIsPeeking(true);
-      }, 3000);
+      }, 4000);
     };
 
     const handleClose = () => {
       setIsExpanded(false);
       setIsPeeking(true);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
+
+    // Cleanup timeout on unmount
+    useEffect(() => {
+      return () => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      };
+    }, []);
 
     return (
       <>
@@ -138,11 +186,11 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ duration: 0.25 }}
-                  className="relative bg-transparent px-4 py-2.5 rounded-full shadow-2xl"
+                  className="relative bg-black/60 px-4 py-2.5 rounded-full shadow-2xl backdrop-blur-sm"
                 >
                   <button
                     onClick={handleClose}
-                    className="absolute -top-1 -right-1 w-5 h-5 bg-transparent rounded-full flex items-center justify-center hover:bg-white/10 transition-all"
+                    className="absolute -top-1 -right-1 w-5 h-5 bg-black/50 rounded-full flex items-center justify-center hover:bg-black/40 transition-all"
                     aria-label="Close"
                   >
                     <X className="w-3 h-3 text-white" strokeWidth={3} />
@@ -234,5 +282,7 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
     );
   }
 );
+
+FloatingMusicPlayer.displayName = "FloatingMusicPlayer";
 
 export default FloatingMusicPlayer;
