@@ -27,9 +27,9 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
     const timeoutRef = useRef<number | null>(null);
     const hasAutoPlayedRef = useRef(false);
 
-    const songUrl = "/songs/putro-nusontoro.mp3";
-    const songTitle = "Putro Nuswantoro";
-    const artistName = "Manthous";
+    const songUrl = "/songs/tasbehlena.mp3";
+    const songTitle = "Nas Tasbehlena";
+    const artistName = "Maher Zain";
 
     useEffect(() => {
       const checkMobile = () => setIsMobile(window.innerWidth < 768);
