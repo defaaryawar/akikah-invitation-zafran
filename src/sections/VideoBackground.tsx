@@ -7,6 +7,7 @@ interface VideoBackgroundProps {
   overlay?: boolean;
   overlayOpacity?: number;
   onVideoReady?: () => void;
+  isMobile?: boolean;
 }
 
 export default function VideoBackground({
@@ -44,11 +45,16 @@ export default function VideoBackground({
 
   return (
     <div className={`absolute inset-0 w-full h-full overflow-hidden ${className}`}>
+      {/* Video dengan styling inline untuk responsif sempurna */}
       <video
         ref={videoRef}
-        className={`absolute top-1/2 left-1/2 min-w-full min-h-full w-auto h-auto -translate-x-1/2 -translate-y-1/2 object-cover transition-opacity duration-700 ${
+        className={`w-full h-full transition-opacity duration-700 ${
           isLoaded ? "opacity-100" : "opacity-0"
         }`}
+        style={{
+          objectFit: "cover", // Selalu cover container, ga peduli zoom
+          objectPosition: "center", // Posisi tengah
+        }}
         autoPlay
         loop
         muted
