@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 
 interface MusicPlayerProps {
   autoPlay?: boolean;
+  show?: boolean; // Tambahan prop buat kontrol visibility
 }
 
 export interface FloatingMusicPlayerHandle {
@@ -17,7 +18,7 @@ export interface FloatingMusicPlayerHandle {
 }
 
 const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerProps>(
-  ({ autoPlay = false }, ref) => {
+  ({ autoPlay = false, show = true }, ref) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [isExpanded, setIsExpanded] = useState(false);
     const [isPeeking, setIsPeeking] = useState(false);
@@ -39,7 +40,8 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
     }, []);
 
     useEffect(() => {
-      if (!autoPlay || hasAutoPlayedRef.current) return;
+      // Jangan autoplay kalo show = false
+      if (!autoPlay || hasAutoPlayedRef.current || !show) return;
 
       hasAutoPlayedRef.current = true;
       setIsPeeking(true);
@@ -70,7 +72,7 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
       return () => {
         clearTimeout(autoPlayTimer);
       };
-    }, [autoPlay]);
+    }, [autoPlay, show]);
 
     useImperativeHandle(ref, () => ({
       playMusic() {
@@ -149,6 +151,15 @@ const FloatingMusicPlayer = forwardRef<FloatingMusicPlayerHandle, MusicPlayerPro
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
       };
     }, []);
+
+    // Kalo show = false, ga render apa-apa
+    if (!show) {
+      return (
+        <audio ref={audioRef} loop>
+          <source src={songUrl} type="audio/mpeg" />
+        </audio>
+      );
+    }
 
     return (
       <>
